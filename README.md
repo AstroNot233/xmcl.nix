@@ -2,7 +2,7 @@
   <img alt="Logo" width="100" src="./logo.png">
 </p>
 
-# xmcl-flake
+# xmcl.nix
 
 自动跟随上游发布的 [X Minecraft Launcher](https://xmcl.app) Nix flake：始终打包上游最新的版本；\
 版本与各平台 source hash 由 [update 工作流](./.github/workflows/update.yml) 刷新，每次更新以与上游同名的 `v<version>` 添加 tag。\
@@ -12,7 +12,7 @@ A Nix flake for [X Minecraft Launcher](https://xmcl.app) that packages the newes
 the [update workflow](./.github/workflows/update.yml) refreshes its version and per-platform source hashes, tagging every bump as `v<version>`.\
 See the [website](https://xmcl.app) and the [upstream repository](https://github.com/Voxelum/x-minecraft-launcher) for the launcher itself.
 
-[![update](https://github.com/AstroNot233/xmcl-flake/actions/workflows/update.yml/badge.svg)](https://github.com/AstroNot233/xmcl-flake/actions/workflows/update.yml)
+[![update](https://github.com/AstroNot233/xmcl.nix/actions/workflows/update.yml/badge.svg)](https://github.com/AstroNot233/xmcl.nix/actions/workflows/update.yml)
 
 <!-- BEGIN PACKAGED -->
 
@@ -31,11 +31,11 @@ See the [website](https://xmcl.app) and the [upstream repository](https://github
 
 ```sh
 # 试用 | Trial
-nix run github:AstroNot233/xmcl-flake
+nix run github:AstroNot233/xmcl.nix
 
 # 安装到 profile | Install to user profile
-nix profile add github:AstroNot233/xmcl-flake
-nix profile remove xmcl-flake
+nix profile add github:AstroNot233/xmcl.nix
+nix profile remove xmcl.nix
 ```
 
 ### home-manager
@@ -45,7 +45,7 @@ nix profile remove xmcl-flake
 inputs = {
   # ...
   xmcl = {
-    url = "github:AstroNot233/xmcl-flake";
+    url = "github:AstroNot233/xmcl.nix";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 };
@@ -56,8 +56,12 @@ inputs = {
 imports = [ inputs.xmcl.homeModules ];
 programs.xmcl = {
   enable = true;
-  launchEnv = { WEBKIT_DISABLE_DMABUF_RENDERER = 1; };
-  launchArg = [ "--electron_ozone_platform_hint=auto" ];
+  root = "/opt/MinecraftX";
+  settings = {
+    locale = "zh-CN";
+    globalMaxMemory = 8192;
+    disableTelemetry = true;
+  };
   jres = [ pkgs.jdk21 ];
 };
 ```
@@ -68,6 +72,9 @@ programs.xmcl = {
 | --- | --- | --- | --- |
 | `enable` | `bool` | `false` | 设为 `true` 以启用 X Minecraft Launcher。 |
 | `jres` | `list of package` | `[ ]` | 写入启动器 Java 列表的 JRE/JDK。 |
+| `root` | `str` | `null` | 游戏数据目录，写进配置目录的 `root`；不设时由启动器首次启动引导选择。 |
+| `settings` | `attrs` | `{ }` | 启动器设置，写入 `setting.json`，例如 `locale`、`globalMaxMemory`、`globalVmOptions`、`httpProxy`、`disableTelemetry`。 |
+| `theme` | `attrs` | `{ }` | 主题，写入 `theme.json`。 |
 | `launchEnv` | `attrs` | `{ }` | 启动时额外的环境变量，例如 `{ WEBKIT_DISABLE_DMABUF_RENDERER = 1; }`。 |
 | `launchArg` | `list of string` | `[ ]` | 传给启动器的启动参数。 |
 
@@ -76,5 +83,5 @@ programs.xmcl = {
 Tag 与上游同名（`v<version>`），可直接锁定到某一版本。
 
 ```nix
-inputs.xmcl.url = "github:AstroNot233/xmcl-flake?ref=v0.71.0";
+inputs.xmcl.url = "github:AstroNot233/xmcl.nix?ref=v0.71.0";
 ```

@@ -19,6 +19,50 @@ in
       '';
       example = [ pkgs.jre8 ];
     };
+    root = mkOption {
+      type = with lib.types; nullOr str;
+      default = null;
+      description = ''
+        Directory the launcher keeps its game data in, written to the `root`
+        file of its config directory. Left unset, the launcher asks for a path
+        on first start instead.
+      '';
+      example = "/opt/MinecraftX";
+    };
+    settings = mkOption {
+      type = with lib.types; attrsOf anything;
+      default = { };
+      description = ''
+        Launcher settings, written to `setting.json`. Only the keys set here end
+        up in the file: the launcher falls back to its own default for every key
+        it does not find, so this is a patch and not a whole file. The keys are
+        the ones the settings page writes — `locale`, `globalMinMemory`,
+        `globalMaxMemory`, `globalVmOptions`, `globalMcOptions`, `globalEnv`,
+        `httpProxy`, `disableTelemetry`, and so on.
+      '';
+      example = {
+        locale = "zh-CN";
+        globalMaxMemory = 8192;
+        globalVmOptions = [ "-XX:+UseZGC" ];
+        disableTelemetry = true;
+      };
+    };
+    theme = mkOption {
+      type = with lib.types; attrsOf anything;
+      default = { };
+      description = ''
+        Theme, written to `theme.json`. A patch as well: the renderer falls back
+        to its own default per key. Not to be confused with the `theme` key of
+        {option}`settings`, which is the light/dark/system mode this theme is
+        drawn in.
+      '';
+      example = {
+        settings = {
+          dark = true;
+          fontSize = 18;
+        };
+      };
+    };
     launchEnv = mkOption {
       type = with lib.types; attrsOf anything;
       default = { };
@@ -66,6 +110,15 @@ in
               toInt ((if (toInt (major version) == 1) then minor else major) version);
           }) cfg.jres;
         };
+      };
+      xdg.configFile."xmcl/root" = mkIf (cfg.root != null) {
+        text = cfg.root;
+      };
+      xdg.configFile."xmcl/setting.json" = mkIf (cfg.settings != { }) {
+        text = builtins.toJSON cfg.settings;
+      };
+      xdg.configFile."xmcl/theme.json" = mkIf (cfg.theme != { }) {
+        text = builtins.toJSON cfg.theme;
       };
     };
 }
