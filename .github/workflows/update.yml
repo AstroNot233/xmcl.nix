@@ -14,7 +14,7 @@ concurrency:
   group: update
   cancel-in-progress: false
 
-# config.json drives the channels and the systems; the scripts in
+# config.json drives the upstream repository and the systems; the scripts in
 # .github/scripts/ do the work, so a later switch from pinning upstream
 # artifacts to caching a local build only replaces the hash job.
 jobs:
@@ -33,12 +33,12 @@ jobs:
     needs: config
     runs-on: ubuntu-latest
     outputs:
-      versions: ${{ steps.resolve.outputs.versions }}
+      version: ${{ steps.resolve.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - id: resolve
-        name: Resolve the upstream channels
+        name: Resolve the upstream version
         env:
           # The anonymous rate limit is per IP, and a runner shares its IP.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,7 +57,7 @@ jobs:
       cancel-in-progress: false
     env:
       SYSTEM: ${{ matrix.name }}
-      VERSIONS: ${{ needs.resolve.outputs.versions }}
+      VERSION: ${{ needs.resolve.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -67,7 +67,7 @@ jobs:
       # the mismatch report is where the wanted hash comes from. A runner can
       # only do this for its own system: asking for the other one reports
       # "platform mismatch" instead of a hash.
-      - name: Read the hashes this system needs
+      - name: Read the hash this system needs
         run: bash .github/scripts/hash.sh
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      VERSIONS: ${{ needs.resolve.outputs.versions }}
+      VERSION: ${{ needs.resolve.outputs.version }}
       HASHES_DIR: ${{ github.workspace }}/hashes
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -92,7 +92,7 @@ jobs:
           path: hashes
 
       - id: apply
-        name: Apply the versions and hashes
+        name: Apply the version and hashes
         run: bash .github/scripts/apply.sh
 
       # Builds each pinned source, i.e. fails when a hash written above does not

@@ -2,27 +2,26 @@
   callPackage,
   lib,
   symlinkJoin,
-  channel ? "release",
   launchEnv ? { },
   launchArg ? [ ],
   ...
 }:
 let
-  enwrap = callPackage ./enwrap.nix { inherit channel launchEnv launchArg; };
-  desktop = callPackage ./desktop.nix { inherit channel; };
+  enwrap = callPackage ./enwrap.nix { inherit launchEnv launchArg; };
+  desktop = callPackage ./desktop.nix { };
 in
 symlinkJoin {
-  name = if channel == "release" then "x-minecraft-launcher" else "x-minecraft-launcher-${channel}";
+  name = "x-minecraft-launcher";
   paths = [
     enwrap
     desktop
   ];
   meta = {
-    description = "X Minecraft Launcher (${channel} channel)";
+    description = "X Minecraft Launcher";
     homepage = "https://xmcl.app";
     license = lib.licenses.mit;
-    # What `nix run` executes; the wrapper is named after the channel.
-    mainProgram = if channel == "release" then "xmcl" else "xmcl-${channel}";
+    # What `nix run` executes.
+    mainProgram = "xmcl";
     platforms = [
       "x86_64-linux"
       "aarch64-linux"

@@ -11,15 +11,6 @@ in
 {
   options.programs.xmcl = {
     enable = mkEnableOption "X Minecraft Launcher";
-    channel = mkOption {
-      type = with lib.types; enum [ "release" "preview" ];
-      default = "release";
-      description = ''
-        Which upstream channel to install: the latest release, or the latest
-        preview, which lands next to it as `xmcl-preview`.
-      '';
-      example = "preview";
-    };
     jres = mkOption {
       type = with lib.types; listOf package;
       default = [ ];
@@ -53,17 +44,14 @@ in
   config =
     let
       cfg = config.programs.xmcl;
-      release = cfg.channel == "release";
-      bin = if release then "xmcl" else "xmcl-${cfg.channel}";
-      label = if release then "X Minecraft Launcher" else "X Minecraft Launcher (Preview)";
     in
     mkIf cfg.enable {
-      home.packages = [ (pkgs.callPackage ./package.nix { inherit (cfg) channel launchEnv launchArg; }) ];
-      xdg.desktopEntries.${bin} = {
+      home.packages = [ (pkgs.callPackage ./package.nix { inherit (cfg) launchEnv launchArg; }) ];
+      xdg.desktopEntries.xmcl = {
         categories = [ "Game" ];
-        exec = bin;
+        exec = "xmcl";
         icon = ./logo.png;
-        name = label;
+        name = "X Minecraft Launcher";
         terminal = false;
         type = "Application";
       };

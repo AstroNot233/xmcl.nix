@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 #
-# Work out which version every channel should be pinned to: the newest release
-# for `release`, the newest prerelease for `preview`. Writes the versions as a
-# JSON object to $GITHUB_OUTPUT; a channel upstream has nothing for keeps the
-# version it is already pinned to.
+# Work out which version should be pinned: the newest one upstream has, a
+# prerelease or not. Writes it as `version` to $GITHUB_OUTPUT; nothing to move
+# to keeps the version already pinned, so a failed lookup never drops a pin.
 #
 # Requires GITHUB_TOKEN when it is available: the anonymous rate limit is per
 # IP, and a runner shares its IP.
@@ -23,44 +22,56 @@ else
 fi
 
 if [ -z "$releases" ] || [ "$releases" = "null" ] || [ "$releases" = "[]" ]; then
-  echo "::warning::the releases API call returned nothing, keeping the pinned channels"
+  echo "::warning::the releases API call returned nothing, keeping the pinned version"
   releases=""
 fi
 
-versions='{}'
-while read -r channel; do
-  prerelease="$(jq -r --arg c "$channel" '.channels[] | select(.name == $c) | .prerelease' "$CONFIG_FILE")"
-  pinned="$(pinned_version "$channel")"
+pinned="$(pinned_version)"
 
-  if [ -z "$releases" ]; then
-    # A failed call must not drop a pin; the next run picks the release up.
+if [ -z "$releases" ]; then
+  # A failed call must not drop a pin; the next run picks the release up.
+  version="$pinned"
+else
+  # Candidates in API order, newest publication first, one "rel|pre <version>"
+  # line each. A prerelease is a candidate like any other: this flake follows
+  # the newest version upstream offers, and an older one stays reachable
+  # through its own tag.
+  candidates="$(jq -r --arg fmt "$VERSION_FMT" '
+    .[] | select(.draft | not) | .tag_name as $tag
+    | select($tag | test("^v" + $fmt + "$"))
+    | "\(if .prerelease then "pre" else "rel" end) \($tag | ltrimstr("v"))"
+  ' <<< "$releases")" || candidates=""
+
+  if [ -z "$candidates" ]; then
+    # Nothing to move to; never read that as "the release is gone".
+    echo "::warning::no release upstream is a plain version, keeping the pinned '${pinned:-none}'"
     version="$pinned"
   else
-    tag="$(jq -r --argjson p "$prerelease" \
-      '[.[] | select((.draft | not) and (.prerelease == $p))][0].tag_name // empty' <<< "$releases")"
+    # The newest version is the one with the highest M.m.p. `sort -V` orders
+    # those correctly, which it does not do for a whole version: it sorts
+    # 0.72.0-rc.1 after 0.72.0.
+    base="$(cut -d' ' -f2 <<< "$candidates" | sed 's/-.*//' | sort -V | tail -n1)"
+    # A tie on M.m.p goes to the stable release, so 0.72.0 wins over 0.72.0-rc.1
+    # no matter which of the two upstream published last; among prereleases it
+    # goes to the API order, i.e. to the newest publication.
+    version="$(awk -v b="$base" '
+      { v = $2; sub(/-.*/, "", v) }
+      v != b { next }
+      $1 == "rel" && rel == "" { rel = $2 }
+      $1 == "pre" && pre == "" { pre = $2 }
+      END { print (rel != "" ? rel : pre) }
+    ' <<< "$candidates")"
 
-    if [ -z "$tag" ]; then
-      # Nothing to move to; never read that as "the channel is gone".
-      echo "::warning::${channel}: no matching release upstream, keeping the pinned '${pinned:-none}'"
+    # Never go backwards: upstream occasionally tags a patch on an older line,
+    # or drops a release, which would silently downgrade the pin and the tag.
+    base_pinned="${pinned%%-*}"
+    if [ -n "$pinned" ] && [ "${version%%-*}" != "$base_pinned" ] &&
+      [ "$(printf '%s\n%s\n' "${version%%-*}" "$base_pinned" | sort -V | tail -n1)" = "$base_pinned" ]; then
+      echo "::warning::upstream is at ${version}, older than the pinned ${pinned}; keeping the pin"
       version="$pinned"
-    else
-      version="${tag#v}"
-      if ! grep -qE -x -- "$VERSION_FMT" <<< "$version"; then
-        echo "::error::upstream tag '${tag}' is not a plain version"
-        exit 1
-      fi
-      # Never go backwards: upstream occasionally tags a patch on an older line,
-      # which would silently downgrade the pin and the tag.
-      if [ -n "$pinned" ] && [ "$version" != "$pinned" ] &&
-        [ "$(printf '%s\n%s\n' "$version" "$pinned" | sort -V | head -n1)" = "$version" ]; then
-        echo "::warning::${channel}: upstream is at ${version}, older than the pinned ${pinned}; keeping the pin"
-        version="$pinned"
-      fi
     fi
   fi
+fi
 
-  echo "${channel}: pinned '${pinned:-none}', upstream '${version:-none}'"
-  versions="$(jq -c --arg c "$channel" --arg v "$version" '. + {($c): $v}' <<< "$versions")"
-done < <(channel_names)
-
-printf 'versions=%s\n' "$versions" >> "$GITHUB_OUTPUT"
+echo "pinned '${pinned:-none}', upstream '${version:-none}'"
+printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"

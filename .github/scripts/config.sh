@@ -22,7 +22,6 @@ config_load() {
     .readme_file,
     .readme_markers[0],
     .readme_markers[1],
-    (.channels | map(.name) | join(" ")),
     (.systems | map(.name) | join(" "))
   ' "$CONFIG_FILE")
 
@@ -32,25 +31,14 @@ config_load() {
   README_FILE="${v[3]}"
   MARKER_BEGIN="${v[4]}"
   MARKER_END="${v[5]}"
-  CHANNELS="${v[6]}"
-  SYSTEMS="${v[7]}"
+  SYSTEMS="${v[6]}"
 
   # Derived here rather than in every caller.
   API_URL="${UPSTREAM_REPO/github.com/api.github.com/repos}"
   RELEASE_URL="${UPSTREAM_REPO}/releases"
 
   export UPSTREAM_REPO VERSION_FMT SOURCES_FILE README_FILE \
-    MARKER_BEGIN MARKER_END CHANNELS SYSTEMS API_URL RELEASE_URL
-}
-
-# The hash job builds one flake attribute per channel: asar, asar-preview, …
-channel_attr() {
-  jq -r --arg c "$1" '.channels[] | select(.name == $c) | .attr' "$CONFIG_FILE"
-}
-
-# Whether a channel may disappear from upstream (default: no).
-channel_optional() {
-  jq -r --arg c "$1" '.channels[] | select(.name == $c) | (.optional // false)' "$CONFIG_FILE"
+    MARKER_BEGIN MARKER_END SYSTEMS API_URL RELEASE_URL
 }
 
 # Asset suffix upstream uses for a system: linux, linux-arm64, …

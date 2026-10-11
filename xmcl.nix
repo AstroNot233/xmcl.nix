@@ -2,23 +2,14 @@
   stdenv,
   fetchurl,
   gzip,
-  channel ? "release",
   ...
 }:
 let
   # config.json names the upstream repository and the asset suffix per system;
-  # sources.json is what the update workflow pins.
+  # sources.json is the newest upstream version — prereleases included — and the
+  # hash the update workflow pinned for it.
   config = builtins.fromJSON (builtins.readFile ./config.json);
-  sources = builtins.fromJSON (builtins.readFile ./sources.json);
-
-  pinned =
-    let
-      entry = sources.${channel} or null;
-    in
-    if entry == null then
-      throw "xmcl: no ${channel} release is pinned in sources.json"
-    else
-      entry;
+  pinned = builtins.fromJSON (builtins.readFile ./sources.json);
 
   system = stdenv.hostPlatform.system;
   assets = builtins.listToAttrs (
@@ -39,7 +30,7 @@ stdenv.mkDerivation {
     in
     fetchurl {
       url = "${base}/app-${version}-${suffix}.asar.gz";
-      hash = pinned.hash.${system} or (throw "No ${channel} hash for ${system}");
+      hash = pinned.hash.${system} or (throw "No hash for ${system} in sources.json");
     };
   nativeBuildInputs = [
     gzip

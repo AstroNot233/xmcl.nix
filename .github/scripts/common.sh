@@ -1,18 +1,11 @@
 #!/usr/bin/env bash
 #
-# Shared helpers for the update scripts. Source config.sh first: the paths, the
-# channel list and the system list all come from there.
+# Shared helpers for the update scripts. Source config.sh first: the paths and
+# the system list all come from there.
 
 # A hash that cannot match anything, used to make nix report the real one when
-# a channel is pinned for the first time.
+# a version is pinned for the first time.
 export FAKE_HASH="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-
-# Channels, one per line, in config order.
-channel_names() {
-  local -a names
-  read -ra names <<< "$CHANNELS"
-  printf '%s\n' "${names[@]}"
-}
 
 # Systems, one per line, in config order.
 system_names() {
@@ -21,22 +14,20 @@ system_names() {
   printf '%s\n' "${names[@]}"
 }
 
-# Version pinned for a channel, empty when the channel is not pinned at all.
+# Version pinned in sources.json, empty when nothing is pinned at all.
 pinned_version() {
-  jq -r --arg c "$1" '.[$c].version // empty' "$SOURCES_FILE"
+  jq -r '.version // empty' "$SOURCES_FILE"
 }
 
-# Version the resolve job found for a channel, empty when upstream has none.
-# VERSIONS is a JSON object handed over by the workflow.
-channel_version() {
-  local versions="${VERSIONS:-}"
-  [ -n "$versions" ] || versions='{}'
-  jq -r --arg c "$1" '.[$c] // empty' <<< "$versions"
+# Version the resolve job settled on, empty when upstream has nothing to pin.
+# VERSION is handed over by the workflow.
+resolved_version() {
+  printf '%s' "${VERSION:-}"
 }
 
-# Hash pinned for a channel on a system, empty when missing.
+# Hash pinned for a system, empty when missing.
 pinned_hash() {
-  jq -r --arg c "$1" --arg s "$2" '.[$c].hash[$s] // empty' "$SOURCES_FILE"
+  jq -r --arg s "$1" '.hash[$s] // empty' "$SOURCES_FILE"
 }
 
 # Upstream release page of a version.

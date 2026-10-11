@@ -7,19 +7,6 @@
     "<!-- BEGIN PACKAGED -->",
     "<!-- END PACKAGED -->"
   ],
-  "channels": [
-    {
-      "name": "release",
-      "prerelease": false,
-      "attr": "asar"
-    },
-    {
-      "name": "preview",
-      "prerelease": true,
-      "optional": true,
-      "attr": "asar-preview"
-    }
-  ],
   "systems": [
     {
       "name": "x86_64-linux",

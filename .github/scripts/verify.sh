@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
 #
-# Build the source of every channel that is pinned — which fails when a hash is
-# wrong — and check that the wrappers still evaluate, without paying for the
-# FHS environment build.
+# Build the pinned source — which fails when its hash is wrong — and check that
+# the wrapper still evaluates, without paying for the FHS environment build.
 set -euo pipefail
 
 source "$(dirname "$0")/config.sh"
 source "$(dirname "$0")/common.sh"
 
-while read -r channel; do
-  version="$(pinned_version "$channel")"
-  [ -n "$version" ] || continue
-  echo "Building ${channel} ${version}"
-  nix build --no-link ".#$(channel_attr "$channel")"
-done < <(channel_names)
+version="$(pinned_version)"
+if [ -z "$version" ]; then
+  echo "nothing is pinned, nothing to verify"
+  exit 0
+fi
 
-while read -r channel; do
-  [ -n "$(pinned_version "$channel")" ] || continue
-  nix build --dry-run ".#${channel}"
-done < <(channel_names)
+echo "Building ${version}"
+nix build --no-link ".#asar"
+nix build --dry-run ".#default"

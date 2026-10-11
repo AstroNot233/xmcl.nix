@@ -10,8 +10,8 @@ source "$(dirname "$0")/common.sh"
 block="$(
   {
     echo
-    header="| Channel | Ref |"
-    align="| --- | --- |"
+    header="| Ref |"
+    align="| --- |"
     while read -r system; do
       header="${header} \`${system}\` |"
       align="${align} :---: |"
@@ -19,26 +19,23 @@ block="$(
     echo "${header} Updated |"
     echo "${align} --- |"
 
-    while read -r channel; do
-      version="$(pinned_version "$channel")"
-      if [ -z "$version" ]; then
-        row="| \`${channel}\` | — |"
-        while read -r system; do row="${row} — |"; done < <(system_names)
-        echo "${row} — |"
-        continue
-      fi
-
-      row="| \`${channel}\` | [\`v${version}\`]($(release_url "$version")) |"
+    version="$(pinned_version)"
+    if [ -z "$version" ]; then
+      row="| — |"
+      while read -r system; do row="${row} — |"; done < <(system_names)
+      echo "${row} — |"
+    else
+      row="| [\`v${version}\`]($(release_url "$version")) |"
       while read -r system; do
-        hash="$(pinned_hash "$channel" "$system")"
+        hash="$(pinned_hash "$system")"
         if [ -n "$hash" ]; then
           row="${row} ✅ [\`${hash:7:8}…\`]($(asset_url "$version" "$(system_asset "$system")")) |"
         else
           row="${row} — |"
         fi
       done < <(system_names)
-      echo "${row} $(jq -r --arg c "$channel" '.[$c].updated // "—"' "$SOURCES_FILE") |"
-    done < <(channel_names)
+      echo "${row} $(jq -r '.updated // "—"' "$SOURCES_FILE") |"
+    fi
   }
 )"
 

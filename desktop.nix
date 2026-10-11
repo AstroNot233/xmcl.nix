@@ -1,18 +1,11 @@
-{
-  makeDesktopItem,
-  channel ? "release",
-  ...
-}:
-let
-  release = channel == "release";
-in
+{ makeDesktopItem, ... }:
 makeDesktopItem {
   categories = [ "Game" ];
   # desktopName is the entry's Name, name is the file it lands in.
-  desktopName = if release then "X Minecraft Launcher" else "X Minecraft Launcher (Preview)";
-  exec = if release then "xmcl" else "xmcl-${channel}";
+  desktopName = "X Minecraft Launcher";
+  exec = "xmcl";
   icon = ./logo.png;
-  name = if release then "X Minecraft Launcher" else "xmcl-${channel}";
+  name = "X Minecraft Launcher";
   startupWMClass = "X Minecraft Launcher";
   terminal = false;
   type = "Application";
