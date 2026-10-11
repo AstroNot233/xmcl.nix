@@ -3,7 +3,7 @@ name: update
 on:
   # Upstream releases at their own pace; a weekly check is enough.
   schedule:
-    - cron: "0 3 * * 1"
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 permissions:
