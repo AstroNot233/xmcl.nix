@@ -2,18 +2,17 @@
   <img alt="Logo" width="100" src="./logo.png">
 </p>
 
-# X-Minecraft-Launcher-Flake
+# xmcl-flake
 
-自动跟随上游发布的 [X Minecraft Launcher](https://xmcl.app) Nix flake：始终打包上游最新的版本，
-preview 也算在内。版本与各平台 source hash 由
-[update 工作流](./.github/workflows/update.yml) 刷新，每次更新以与上游同名的 `v<version>` 打 tag；
-要停在某个版本，锁到对应的 tag 即可。
+自动跟随上游发布的 [X Minecraft Launcher](https://xmcl.app) Nix flake：始终打包上游最新的版本；\
+版本与各平台 source hash 由 [update 工作流](./.github/workflows/update.yml) 刷新，每次更新以与上游同名的 `v<version>` 添加 tag。\
+启动器本身见[官网](https://xmcl.app)与[上游仓库](https://github.com/Voxelum/x-minecraft-launcher)。
 
-A Nix flake for [X Minecraft Launcher](https://xmcl.app) that packages the newest upstream version,
-prereleases included. The [update workflow](./.github/workflows/update.yml) refreshes its version and
-per-platform source hashes, tagging every bump as `v<version>` — pin such a tag to stay on a version.
+A Nix flake for [X Minecraft Launcher](https://xmcl.app) that packages the newest upstream version, prereleases included;\
+the [update workflow](./.github/workflows/update.yml) refreshes its version and per-platform source hashes, tagging every bump as `v<version>`.\
+See the [website](https://xmcl.app) and the [upstream repository](https://github.com/Voxelum/x-minecraft-launcher) for the launcher itself.
 
-[![update](https://github.com/AstroNot233/X-Minecraft-Launcher-Flake/actions/workflows/update.yml/badge.svg)](https://github.com/AstroNot233/X-Minecraft-Launcher-Flake/actions/workflows/update.yml)
+[![update](https://github.com/AstroNot233/xmcl-flake/actions/workflows/update.yml/badge.svg)](https://github.com/AstroNot233/xmcl-flake/actions/workflows/update.yml)
 
 <!-- BEGIN PACKAGED -->
 
@@ -28,21 +27,15 @@ per-platform source hashes, tagging every bump as `v<version>` — pin such a ta
 | `✅` | hash 由 update 工作流从上游产物直接取得 · hash taken from the upstream artifact by the update workflow |
 | `—` | 上游当前没有可用的版本 · upstream has no usable release right now |
 
-## 用法 Usage
-
-### 试跑 Trial with nix run
+## 用法 | Usage
 
 ```sh
-nix run github:AstroNot233/X-Minecraft-Launcher-Flake
-```
+# 试用 | Trial
+nix run github:AstroNot233/xmcl-flake
 
-### 装进 profile Install to user profile
-
-```sh
-# Install
-nix profile add github:AstroNot233/X-Minecraft-Launcher-Flake
-# Uninstall
-nix profile remove X-Minecraft-Launcher-Flake
+# 安装到 profile | Install to user profile
+nix profile add github:AstroNot233/xmcl-flake
+nix profile remove xmcl-flake
 ```
 
 ### home-manager
@@ -52,81 +45,36 @@ nix profile remove X-Minecraft-Launcher-Flake
 inputs = {
   # ...
   xmcl = {
-    url = "github:AstroNot233/X-Minecraft-Launcher-Flake";
+    url = "github:AstroNot233/xmcl-flake";
     inputs.nixpkgs.follows = "nixpkgs";
   };
-  # ...
 };
 ```
 
 ```nix
 # home.nix
-imports = [
-  inputs.xmcl.homeModules
-];
+imports = [ inputs.xmcl.homeModules ];
 programs.xmcl = {
   enable = true;
-  launchEnv = {
-    WEBKIT_DISABLE_DMABUF_RENDERER = 1;
-    CUSTOMIZED_LAUNCH_ENV = "int / string";
-  };
-  launchArg = [
-    "--electron_ozone_platform_hint=auto"
-  ];
-  jres = [
-    pkgs.jdk8
-    pkgs.jdk11
-    pkgs.jdk17
-    pkgs.jdk21
-    pkgs.jdk25
-    pkgs.any_other_jdk
-  ];
+  launchEnv = { WEBKIT_DISABLE_DMABUF_RENDERER = 1; };
+  launchArg = [ "--electron_ozone_platform_hint=auto" ];
+  jres = [ pkgs.jdk21 ];
 };
 ```
 
-### 固定版本 Pin a version
+可选属性：
 
-Tag 名与上游一致（`v<version>`），因此可以直接锁到某个版本；上游曾经的 preview 同样留有 tag：
+| 键 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `enable` | `bool` | `false` | 设为 `true` 以启用 X Minecraft Launcher。 |
+| `jres` | `list of package` | `[ ]` | 写入启动器 Java 列表的 JRE/JDK。 |
+| `launchEnv` | `attrs` | `{ }` | 启动时额外的环境变量，例如 `{ WEBKIT_DISABLE_DMABUF_RENDERER = 1; }`。 |
+| `launchArg` | `list of string` | `[ ]` | 传给启动器的启动参数。 |
+
+### 锁定版本 | Pin a version
+
+Tag 与上游同名（`v<version>`），可直接锁定到某一版本。
 
 ```nix
-inputs.xmcl.url = "github:AstroNot233/X-Minecraft-Launcher-Flake?ref=v0.71.0";
+inputs.xmcl.url = "github:AstroNot233/xmcl-flake?ref=v0.71.0";
 ```
-
-## 选项 Options
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `programs.xmcl.enable` | bool | `false` | Install the launcher and its desktop entry. |
-| `programs.xmcl.jres` | list of package | `[ ]` | JREs/JDKs to be written into the launcher's Java list. |
-| `programs.xmcl.launchEnv` | attrs | `{ }` | Environment variables for the launcher. |
-| `programs.xmcl.launchArg` | list of string | `[ ]` | Arguments passed to the launcher. |
-
-## 输出 Outputs
-
-| Output | Description |
-| --- | --- |
-| `packages.<system>.default` | The launcher (`xmcl`), wrapped in an FHS environment with its desktop entry. |
-| `packages.<system>.asar` | Unwrapped app archive; the update workflow builds it to verify a hash. |
-| `homeModules` | home-manager module (see Options). |
-
-## 更新机制 How updates work
-
-[`.github/workflows/update.yml`](./.github/workflows/update.yml) runs weekly (Monday 03:00 UTC) and on
-`workflow_dispatch`. What to track lives in [`config.json`](./config.json) — the upstream repository and
-the systems — and the work itself in [`.github/scripts/`](./.github/scripts):
-
-1. `resolve` reads the upstream releases API and picks the newest version, prereleases included: the
-   highest `M.m.p`, with a stable release winning over its own prerelease. A failed call, or a window
-   that has no usable tag, keeps the pin instead of dropping it, and a version older than the pinned one
-   is ignored.
-2. `hash` runs once per system (`ubuntu-latest`, `ubuntu-24.04-arm`), pins that version, builds the
-   `asar`, and takes the hash nix asks for out of the `hash mismatch` report. A runner can only hash its
-   own system: the other one reports `platform mismatch`. Every hash it reports is then built again with
-   that hash, which is the only check the other system's hash ever gets. Each job hands its pair over as
-   an artifact.
-3. `publish` applies the version and the hashes to `sources.json`, rebuilds the pinned source to verify
-   them, refreshes the table above, and commits `v<version>` together with the matching tag.
-
-The flake only ever carries the newest version; an older one, a plain release or a preview, stays
-available through its `v<version>` tag. Nothing is committed when nothing moved, and a rerun at the same
-version means upstream replaced an artifact, in which case the hash is corrected and its tag follows.
