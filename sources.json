@@ -1,8 +1,8 @@
 {
-  "version": "0.72.0",
-  "updated": "2026-10-18",
+  "version": "0.73.0",
+  "updated": "2026-10-31",
   "hash": {
-    "x86_64-linux": "sha256-arjBvth7iEa/Kez7PuunBej8tGZGN0EDrbxgHSRvUV4=",
-    "aarch64-linux": "sha256-lzcODGpMN1sZVjCPe9NXNM3skikR9/WGNwloAn5Q2tk="
+    "x86_64-linux": "sha256-URJe5hhhhMXPUSg2+ctL/iBIc6EFQjSfTC7wynNt/A0=",
+    "aarch64-linux": "sha256-K1hiDMLA8PlqMpoZmH7yny/YILHjgKkPGoRxU36NJUc="
   }
 }
