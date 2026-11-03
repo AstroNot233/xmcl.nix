@@ -18,7 +18,7 @@ See the [website](https://xmcl.app) and the [upstream repository](https://github
 
 | Ref | `x86_64-linux` | `aarch64-linux` | Updated |
 | --- | :---: | :---: | --- |
-| [`v0.73.0`](https://github.com/Voxelum/x-minecraft-launcher/releases/tag/v0.73.0) | ✅ [`URJe5hhh…`](https://github.com/Voxelum/x-minecraft-launcher/releases/download/v0.73.0/app-0.73.0-linux.asar.gz) | ✅ [`K1hiDMLA…`](https://github.com/Voxelum/x-minecraft-launcher/releases/download/v0.73.0/app-0.73.0-linux-arm64.asar.gz) | 2026-10-31 |
+| [`v0.73.1`](https://github.com/Voxelum/x-minecraft-launcher/releases/tag/v0.73.1) | ✅ [`auwmgE2r…`](https://github.com/Voxelum/x-minecraft-launcher/releases/download/v0.73.1/app-0.73.1-linux.asar.gz) | ✅ [`VjB0tWzh…`](https://github.com/Voxelum/x-minecraft-launcher/releases/download/v0.73.1/app-0.73.1-linux-arm64.asar.gz) | 2026-11-03 |
 
 <!-- END PACKAGED -->
 
